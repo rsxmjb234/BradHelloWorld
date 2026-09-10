@@ -24,7 +24,7 @@ test("RTF export includes filter context and only visible transactions", () => {
 test("CSV export includes filter context and guards spreadsheet formulas", () => {
   const visibleItems = [
     {
-      sprl: "=Dangerous",
+      sprl: "Quoted \"Value\"",
       pdr: "+Lookup",
       requestorChange: "-Major",
       systems: "@QE",
@@ -35,7 +35,7 @@ test("CSV export includes filter context and guards spreadsheet formulas", () =>
   const csv = buildCsv(visibleItems, "Search filter: formulas");
 
   assert.match(csv, /^\uFEFF"Filter Context","Search filter: formulas"/);
-  assert.match(csv, /"'=Dangerous","'\+Lookup","'-Major","'@QE","FHIR"/);
+  assert.match(csv, /"Quoted ""Value""","'\+Lookup","'-Major","'@QE","FHIR"/);
   assert.doesNotMatch(csv, /Document Discovery/);
 });
 

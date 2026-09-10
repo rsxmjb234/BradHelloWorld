@@ -394,6 +394,15 @@
         margin-bottom: 10px;
       }
 
+      .detail-box dt {
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .detail-box dd {
+        margin: 0;
+      }
+
       .detail-box.full-span {
         grid-column: 1 / -1;
       }
@@ -1022,6 +1031,14 @@
 
       function renderTable(items) {
         currentTransactions = [...items];
+        if (!items.length) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="7">No transactions matched the current search. Adjust the filter to restore dashboard rows.</td>
+            </tr>
+          `;
+          return;
+        }
         tableBody.innerHTML = items
           .map(
             (item) => `
@@ -1101,17 +1118,17 @@
             ${chip(item.impactLabel, item.impactLabel.toLowerCase().includes("retired") ? "retired" : item.impactLabel.toLowerCase().includes("major") ? "progress" : item.impactLabel.toLowerCase().includes("minor") ? "future" : "current")}
           </div>
           <p class="detail-copy">${escapeHtml(item.businessPurpose)}</p>
-          <div class="detail-grid">
-            <div class="detail-box"><strong>Business purpose</strong>${escapeHtml(item.businessPurpose)}</div>
-            <div class="detail-box"><strong>Triggering event</strong>${escapeHtml(item.trigger)}</div>
-            <div class="detail-box"><strong>Input message</strong>${escapeHtml(item.inputMessage)}</div>
-            <div class="detail-box"><strong>Output message</strong>${escapeHtml(item.outputMessage)}</div>
-            <div class="detail-box"><strong>Standards used</strong>${escapeHtml(item.standardsUsed)}</div>
-            <div class="detail-box"><strong>Security requirements</strong>${escapeHtml(item.securityRequirements)}</div>
-            <div class="detail-box"><strong>Participating systems</strong>${escapeHtml(item.participatingSystems)}</div>
-            <div class="detail-box"><strong>Migration impact</strong>${escapeHtml(item.migrationImpact)}</div>
-            <div class="detail-box full-span"><strong>Benefits</strong>${escapeHtml(item.benefits)}</div>
-          </div>
+          <dl class="detail-grid">
+            <div class="detail-box"><dt>Business purpose</dt><dd>${escapeHtml(item.businessPurpose)}</dd></div>
+            <div class="detail-box"><dt>Triggering event</dt><dd>${escapeHtml(item.trigger)}</dd></div>
+            <div class="detail-box"><dt>Input message</dt><dd>${escapeHtml(item.inputMessage)}</dd></div>
+            <div class="detail-box"><dt>Output message</dt><dd>${escapeHtml(item.outputMessage)}</dd></div>
+            <div class="detail-box"><dt>Standards used</dt><dd>${escapeHtml(item.standardsUsed)}</dd></div>
+            <div class="detail-box"><dt>Security requirements</dt><dd>${escapeHtml(item.securityRequirements)}</dd></div>
+            <div class="detail-box"><dt>Participating systems</dt><dd>${escapeHtml(item.participatingSystems)}</dd></div>
+            <div class="detail-box"><dt>Migration impact</dt><dd>${escapeHtml(item.migrationImpact)}</dd></div>
+            <div class="detail-box full-span"><dt>Benefits</dt><dd>${escapeHtml(item.benefits)}</dd></div>
+          </dl>
           <div class="comparison-columns" style="margin-top: 20px;">
             <div class="comparison-card">
               <h3>SPRL flow</h3>
