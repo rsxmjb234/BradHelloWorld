@@ -1139,6 +1139,17 @@
         renderDetail(target.getAttribute("data-open-detail"));
       });
 
+      function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
       searchInput.addEventListener("input", (event) => {
         const term = event.target.value;
         if (!term.trim()) {
@@ -1160,11 +1171,7 @@
           </html>
         `;
         const blob = new Blob([content], { type: "application/msword" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "qe-migration-comparison.doc";
-        link.click();
-        URL.revokeObjectURL(link.href);
+        triggerDownload(blob, "qe-migration-comparison.doc");
       });
 
       document.getElementById("export-excel").addEventListener("click", () => {
@@ -1193,11 +1200,7 @@
           </table>
         `;
         const blob = new Blob([table], { type: "application/vnd.ms-excel" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "qe-migration-comparison.xls";
-        link.click();
-        URL.revokeObjectURL(link.href);
+        triggerDownload(blob, "qe-migration-comparison.xls");
       });
 
       renderTable(transactions);
