@@ -1124,13 +1124,14 @@
           </div>
         `;
         if (shouldFocus) {
-          window.location.hash = "transaction-detail";
+          detailShell.scrollIntoView({ behavior: "smooth", block: "start" });
           window.requestAnimationFrame(() => detailShell.focus());
         }
       }
 
       function searchTransactions(term) {
-        const query = term.trim().toLowerCase();
+        const normalizedTerm = term.trim();
+        const query = normalizedTerm.toLowerCase();
         const filtered = baseTransactions.filter((item) =>
           [
             item.sprl,
@@ -1154,10 +1155,10 @@
         );
 
         renderTable(filtered);
-        currentFilterText = `Search filter: ${term}`;
+        currentFilterText = `Search filter: ${normalizedTerm}`;
         searchFeedback.textContent = filtered.length
-          ? `Showing ${filtered.length} transaction${filtered.length === 1 ? "" : "s"} for “${term}”.`
-          : `No transactions matched “${term}”. Try terms like Patient Discovery, XCPD, FHIR, QE, or Document Retrieve.`;
+          ? `Showing ${filtered.length} transaction${filtered.length === 1 ? "" : "s"} for “${normalizedTerm}”.`
+          : `No transactions matched “${normalizedTerm}”. Try terms like Patient Discovery, XCPD, FHIR, QE, or Document Retrieve.`;
         filterSummary.textContent = `Active view: ${currentFilterText}.`;
       }
 
