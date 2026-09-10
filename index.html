@@ -136,6 +136,18 @@
         gap: 12px;
       }
 
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .search-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #c9def4;
+      }
+
       .button,
       .table-button {
         border: 0;
@@ -530,16 +542,19 @@
               </p>
             </div>
             <div class="filters">
-              <input
-                id="transaction-search"
-                class="search"
-                type="search"
-                placeholder="Search by transaction, standard, system, QE, or capability"
-                aria-label="Search transaction comparison"
-              />
-              <button class="button secondary" id="export-pdf">Print / Save as PDF</button>
-              <button class="button secondary" id="export-word">Export Word RTF</button>
-              <button class="button secondary" id="export-excel">Export Excel CSV</button>
+              <div class="filter-group">
+                <label class="search-label" for="transaction-search">Search the comparison</label>
+                <input
+                  id="transaction-search"
+                  class="search"
+                  type="search"
+                  placeholder="Search by transaction, standard, system, QE, or capability"
+                  aria-label="Search transaction comparison"
+                />
+              </div>
+              <button class="button secondary" id="export-pdf" type="button">Print / Save Dashboard as PDF</button>
+              <button class="button secondary" id="export-word" type="button">Export Dashboard to Word RTF</button>
+              <button class="button secondary" id="export-excel" type="button">Export Dashboard to Excel CSV</button>
             </div>
           </div>
           <div class="table-wrap">
@@ -562,6 +577,7 @@
             Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.
           </p>
           <p class="table-note" id="filter-summary">Active view: Full transaction dashboard.</p>
+          <p class="table-note">Dashboard exports include the current filter context and visible comparison rows.</p>
         </section>
 
         <section id="core-comparisons">
