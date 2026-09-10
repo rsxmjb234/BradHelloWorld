@@ -71,5 +71,5 @@ export function buildCsv(items, filterText) {
     ...items.map((item) => [item.sprl, item.pdr, item.requestorChange, item.systems, item.standards])
   ];
 
-  return rows.map((row) => row.map(safeDelimitedCell).join(",")).join("\n");
+  return `\uFEFF${rows.map((row) => row.map(safeDelimitedCell).join(",")).join("\n")}`;
 }

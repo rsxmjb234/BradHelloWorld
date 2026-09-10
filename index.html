@@ -734,7 +734,7 @@
               </p>
             </div>
           </div>
-          <div class="detail-shell" id="detail-shell" aria-live="polite" tabindex="-1"></div>
+          <div class="detail-shell" id="detail-shell" aria-live="polite"></div>
         </section>
       </main>
 
@@ -1125,7 +1125,6 @@
         `;
         if (shouldFocus) {
           detailShell.scrollIntoView({ behavior: "smooth", block: "start" });
-          window.requestAnimationFrame(() => detailShell.focus());
         }
       }
 
@@ -1159,7 +1158,7 @@
         searchFeedback.textContent = filtered.length
           ? `Showing ${filtered.length} transaction${filtered.length === 1 ? "" : "s"} for “${normalizedTerm}”.`
           : `No transactions matched “${normalizedTerm}”. Try terms like Patient Discovery, XCPD, FHIR, QE, or Document Retrieve.`;
-        filterSummary.textContent = `Active view: ${currentFilterText}.`;
+        syncFilterSummary();
       }
 
       document.addEventListener("click", (event) => {
@@ -1184,7 +1183,11 @@
         currentFilterText = "Full transaction dashboard";
         searchFeedback.textContent =
           "Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.";
-        filterSummary.textContent = "Active view: Full transaction dashboard.";
+        syncFilterSummary();
+      }
+
+      function syncFilterSummary() {
+        filterSummary.textContent = `Active view: ${currentFilterText}.`;
       }
 
       searchInput.addEventListener("input", (event) => {
@@ -1197,9 +1200,11 @@
       });
 
       document.getElementById("export-pdf").addEventListener("click", () => {
-        filterSummary.textContent = `Active view: ${currentFilterText}.`;
+        syncFilterSummary();
         window.print();
       });
+
+      window.addEventListener("beforeprint", syncFilterSummary);
 
       document.getElementById("export-word").addEventListener("click", () => {
         const content = buildWordExportRtf(currentTransactions, currentFilterText);

@@ -34,9 +34,27 @@ test("CSV export includes filter context and guards spreadsheet formulas", () =>
 
   const csv = buildCsv(visibleItems, "Search filter: formulas");
 
-  assert.match(csv, /"Filter Context","Search filter: formulas"/);
+  assert.match(csv, /^\uFEFF"Filter Context","Search filter: formulas"/);
   assert.match(csv, /"'=Dangerous","'\+Lookup","'-Major","'@QE","FHIR"/);
   assert.doesNotMatch(csv, /Document Discovery/);
+});
+
+test("CSV export preserves non-ASCII text for Excel-compatible output", () => {
+  const visibleItems = [
+    {
+      sprl: "Patient Discovery → Retrieve",
+      pdr: "Café Repository",
+      requestorChange: "Minor",
+      systems: "QE",
+      standards: "FHIR"
+    }
+  ];
+
+  const csv = buildCsv(visibleItems, "Search filter: café");
+
+  assert.match(csv, /^\uFEFF/);
+  assert.match(csv, /Patient Discovery → Retrieve/);
+  assert.match(csv, /Café Repository/);
 });
 
 test("RTF escaping preserves non-ASCII characters through UTF-16 code units", () => {
