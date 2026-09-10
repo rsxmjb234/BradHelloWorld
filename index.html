@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QE Migration Journey | SPRL to Patient Match & PDR</title>
+    <style>
+      :root {
+        --bg: #08111f;
+        --panel: rgba(10, 23, 43, 0.78);
+        --panel-strong: rgba(14, 30, 56, 0.96);
+        --border: rgba(148, 163, 184, 0.18);
+        --text: #e5eef9;
+        --muted: #9eb2cc;
+        --accent: #7dd3fc;
+        --accent-strong: #38bdf8;
+        --violet: #a78bfa;
+        --green: #34d399;
+        --amber: #fbbf24;
+        --rose: #fb7185;
+        --shadow: 0 24px 60px rgba(8, 17, 31, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 34%),
+          radial-gradient(circle at top right, rgba(167, 139, 250, 0.18), transparent 28%),
+          linear-gradient(180deg, #040a13 0%, #08111f 38%, #0b1324 100%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .hero {
+        padding: 72px 0 48px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.12);
+        color: var(--accent);
+        font-size: 0.84rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 20px 0 18px;
+        font-size: clamp(2.6rem, 5vw, 4.6rem);
+        line-height: 0.98;
+        max-width: 13ch;
+      }
+
+      .lede {
+        max-width: 66ch;
+        color: var(--muted);
+        font-size: 1.06rem;
+        line-height: 1.7;
+      }
+
+      .hero-grid,
+      .metrics,
+      .panel-grid,
+      .release-grid,
+      .detail-grid,
+      .impact-grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1.35fr 0.95fr;
+        align-items: end;
+        margin-top: 28px;
+      }
+
+      .card,
+      .table-wrap,
+      .detail-shell,
+      .comparison-block {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .hero-card,
+      .stat-card,
+      .comparison-card,
+      .detail-shell,
+      .impact-card,
+      .release-card {
+        padding: 24px;
+      }
+
+      .hero-card {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -25% -35% auto;
+        width: 230px;
+        height: 230px;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.32), transparent 68%);
+      }
+
+      .button-row,
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .button,
+      .table-button {
+        border: 0;
+        border-radius: 999px;
+        padding: 13px 18px;
+        font: inherit;
+        cursor: pointer;
+        transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+      }
+
+      .button:hover,
+      .table-button:hover {
+        transform: translateY(-1px);
+      }
+
+      .button.primary {
+        background: linear-gradient(135deg, var(--accent-strong), #22c55e);
+        color: #03111f;
+        font-weight: 700;
+      }
+
+      .button.secondary,
+      .table-button {
+        background: rgba(148, 163, 184, 0.14);
+        color: var(--text);
+      }
+
+      .metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 24px 0 56px;
+      }
+
+      .metric-value {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+
+      .metric-copy,
+      .small-copy,
+      .table-note,
+      .detail-copy,
+      .flow-step {
+        color: var(--muted);
+      }
+
+      section {
+        padding: 24px 0 48px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .section-header h2 {
+        margin: 0 0 8px;
+        font-size: clamp(1.7rem, 3vw, 2.4rem);
+      }
+
+      .section-header p {
+        margin: 0;
+        max-width: 60ch;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .search {
+        width: min(360px, 100%);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(3, 12, 24, 0.7);
+        color: var(--text);
+        border-radius: 16px;
+        padding: 14px 16px;
+        font: inherit;
+      }
+
+      .table-wrap {
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 18px 16px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        vertical-align: top;
+      }
+
+      th {
+        color: #c9def4;
+        font-size: 0.84rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: rgba(5, 13, 25, 0.72);
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .row-title {
+        font-weight: 700;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .chip.current {
+        background: rgba(52, 211, 153, 0.16);
+        color: #8ef0ca;
+      }
+
+      .chip.future {
+        background: rgba(125, 211, 252, 0.16);
+        color: #a6e3ff;
+      }
+
+      .chip.progress {
+        background: rgba(251, 191, 36, 0.16);
+        color: #f9d878;
+      }
+
+      .chip.retired {
+        background: rgba(251, 113, 133, 0.16);
+        color: #fca6b5;
+      }
+
+      .chip.new {
+        background: rgba(167, 139, 250, 0.16);
+        color: #cfbdfd;
+      }
+
+      .panel-grid,
+      .impact-grid,
+      .release-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .comparison-block {
+        padding: 24px;
+      }
+
+      .comparison-columns {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 18px;
+      }
+
+      .comparison-columns ul,
+      .detail-list,
+      .release-card ul {
+        margin: 12px 0 0;
+        padding-left: 20px;
+      }
+
+      .comparison-columns li,
+      .detail-list li,
+      .release-card li {
+        margin-bottom: 10px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .comparison-card {
+        background: rgba(7, 17, 33, 0.85);
+        border-radius: 20px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+      }
+
+      .comparison-card h3,
+      .detail-shell h3,
+      .release-card h3,
+      .impact-card h3 {
+        margin: 0;
+      }
+
+      .flow-rail {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .flow-step {
+        position: relative;
+        padding: 14px 18px;
+        border-radius: 16px;
+        background: rgba(7, 17, 33, 0.78);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+      }
+
+      .flow-step:not(:last-child)::after {
+        content: "↓";
+        position: absolute;
+        left: 50%;
+        bottom: -19px;
+        transform: translateX(-50%);
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .detail-shell {
+        margin-top: 20px;
+      }
+
+      .detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 18px;
+      }
+
+      .detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 14px 0 2px;
+      }
+
+      .detail-box {
+        padding: 18px;
+        background: rgba(7, 17, 33, 0.74);
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+      }
+
+      .detail-box strong {
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .table-note {
+        margin: 14px 0 0;
+        font-size: 0.94rem;
+      }
+
+      .impact-card,
+      .release-card {
+        background: rgba(7, 17, 33, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 22px;
+      }
+
+      .footer {
+        padding: 18px 0 56px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+          color: #111827;
+        }
+
+        .button-row,
+        .filters,
+        #transaction-search {
+          display: none !important;
+        }
+
+        .card,
+        .table-wrap,
+        .detail-shell,
+        .comparison-block,
+        .comparison-card,
+        .impact-card,
+        .release-card {
+          background: #ffffff;
+          color: #111827;
+          box-shadow: none;
+          border: 1px solid #d1d5db;
+        }
+
+        .small-copy,
+        .metric-copy,
+        .table-note,
+        .detail-copy,
+        .flow-step,
+        .comparison-columns li,
+        .detail-list li,
+        .release-card li,
+        .section-header p {
+          color: #4b5563;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .hero-grid,
+        .metrics,
+        .panel-grid,
+        .comparison-columns,
+        .detail-grid,
+        .impact-grid,
+        .release-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .section-header {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        table,
+        thead,
+        tbody,
+        th,
+        td,
+        tr {
+          display: block;
+        }
+
+        thead {
+          display: none;
+        }
+
+        tr {
+          padding: 18px 16px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        td {
+          border: 0;
+          padding: 8px 0;
+        }
+
+        td::before {
+          content: attr(data-label);
+          display: block;
+          margin-bottom: 4px;
+          color: #c9def4;
+          font-size: 0.78rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <span class="eyebrow">QE modernization narrative</span>
+        <div class="hero-grid">
+          <div>
+            <h1>From SPRL to patient match, CCD retrieval gets radically simpler.</h1>
+            <p class="lede">
+              A marketing-ready experience for QE leaders, business teams, and technical stakeholders
+              that shows how the familiar SPRL patient discovery → document discovery → document retrieve
+              journey evolves into patient lookup, repository search, and direct document retrieval in PDR.
+            </p>
+            <div class="button-row">
+              <a class="button primary" href="#dashboard">View the comparison journey</a>
+              <a class="button secondary" href="#transaction-detail">Open a transaction detail</a>
+            </div>
+          </div>
+          <div class="card hero-card">
+            <h2>What changes for requestors?</h2>
+            <ul class="detail-list">
+              <li>Patient matching shifts from statewide QE fan-out to patient lookup with Verato/sMPI support.</li>
+              <li>Document discovery becomes manifest search against a centralized repository index.</li>
+              <li>Document retrieval becomes direct API access to repository-held CCDs and clinical documents.</li>
+            </ul>
+            <p class="small-copy">Built to make the migration path feel concrete, strategic, and easy to explain.</p>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="card stat-card">
+            <div class="metric-value">12</div>
+            <div class="metric-copy">Priority transactions in the initial release scope.</div>
+          </div>
+          <div class="card stat-card">
+            <div class="metric-value">3</div>
+            <div class="metric-copy">Core journey stages already understood by QE leaders.</div>
+          </div>
+          <div class="card stat-card">
+            <div class="metric-value">1</div>
+            <div class="metric-copy">Unified story for business, technical, and operational audiences.</div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section id="dashboard">
+          <div class="section-header">
+            <div>
+              <h2>Patient Discovery → Document Discovery → Document Retrieve</h2>
+              <p>
+                Start with the side-by-side dashboard QE leaders already understand: each transaction shows the current SPRL motion, the future PDR capability, standards, participating systems, and migration status.
+              </p>
+            </div>
+            <div class="filters">
+              <input
+                id="transaction-search"
+                class="search"
+                type="search"
+                placeholder="Search by transaction, standard, system, QE, or capability"
+                aria-label="Search transaction comparison"
+              />
+              <button class="button secondary" id="export-pdf">Export PDF</button>
+              <button class="button secondary" id="export-word">Export Word</button>
+              <button class="button secondary" id="export-excel">Export Excel</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table aria-label="SPRL to PDR transaction comparison table">
+              <thead>
+                <tr>
+                  <th>SPRL Transaction</th>
+                  <th>PDR Equivalent</th>
+                  <th>Requestor Change</th>
+                  <th>Systems</th>
+                  <th>Standards</th>
+                  <th>Status</th>
+                  <th>Detail</th>
+                </tr>
+              </thead>
+              <tbody id="transaction-table-body"></tbody>
+            </table>
+          </div>
+          <p class="table-note" id="search-feedback">
+            Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.
+          </p>
+        </section>
+
+        <section id="core-comparisons">
+          <div class="section-header">
+            <div>
+              <h2>Core transaction comparisons</h2>
+              <p>
+                The three most important motions are expanded below to show exactly what happens today in SPRL versus what happens tomorrow in PDR.
+              </p>
+            </div>
+          </div>
+          <div class="panel-grid" id="comparison-panels"></div>
+        </section>
+
+        <section id="workflow-diagrams">
+          <div class="section-header">
+            <div>
+              <h2>End-to-end flow visualization</h2>
+              <p>
+                Every journey stage can be reduced to two memorable pictures: SPRL fans out across QEs, while PDR centralizes search and retrieval around the repository.
+              </p>
+            </div>
+          </div>
+          <div class="panel-grid">
+            <div class="comparison-block">
+              <h3>SPRL flow</h3>
+              <div class="flow-rail">
+                <div class="flow-step">Provider</div>
+                <div class="flow-step">QE</div>
+                <div class="flow-step">SPRL</div>
+                <div class="flow-step">Other QEs</div>
+                <div class="flow-step">Documents Returned</div>
+              </div>
+            </div>
+            <div class="comparison-block">
+              <h3>PDR flow</h3>
+              <div class="flow-rail">
+                <div class="flow-step">Provider</div>
+                <div class="flow-step">PDR</div>
+                <div class="flow-step">Document Store</div>
+                <div class="flow-step">Documents Returned</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="standards-matrix">
+          <div class="section-header">
+            <div>
+              <h2>Standards mapping matrix</h2>
+              <p>
+                This matrix highlights the technology shift from IHE/XML-heavy statewide exchange to repository-centric services and FHIR-friendly API integration.
+              </p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table aria-label="Standards matrix">
+              <thead>
+                <tr>
+                  <th>Capability</th>
+                  <th>SPRL</th>
+                  <th>PDR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Capability">Patient Discovery</td>
+                  <td data-label="SPRL">XCPD</td>
+                  <td data-label="PDR">Patient Lookup</td>
+                </tr>
+                <tr>
+                  <td data-label="Capability">Document Discovery</td>
+                  <td data-label="SPRL">XCA Query</td>
+                  <td data-label="PDR">Manifest Search</td>
+                </tr>
+                <tr>
+                  <td data-label="Capability">Document Retrieve</td>
+                  <td data-label="SPRL">XCA Retrieve</td>
+                  <td data-label="PDR">Document Retrieval API</td>
+                </tr>
+                <tr>
+                  <td data-label="Capability">Transport</td>
+                  <td data-label="SPRL">IHE/XML</td>
+                  <td data-label="PDR">FHIR JSON/API</td>
+                </tr>
+                <tr>
+                  <td data-label="Capability">Repository</td>
+                  <td data-label="SPRL">QEs</td>
+                  <td data-label="PDR">PDR Repository</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="impact">
+          <div class="section-header">
+            <div>
+              <h2>Migration impact view</h2>
+              <p>
+                The impact lens helps business and technical teams quickly see where behavior stays familiar, where APIs change materially, and where legacy routing disappears.
+              </p>
+            </div>
+          </div>
+          <div class="impact-grid" id="impact-grid"></div>
+        </section>
+
+        <section id="release-scope">
+          <div class="section-header">
+            <div>
+              <h2>Suggested initial transaction list</h2>
+              <p>
+                The first release can tell the whole modernization story by combining the three core journey stages with adjacent retrieval, alerting, and cross-QE capabilities.
+              </p>
+            </div>
+          </div>
+          <div class="release-grid">
+            <div class="release-card">
+              <h3>Core journey</h3>
+              <ul>
+                <li>Patient Discovery</li>
+                <li>Document Discovery</li>
+                <li>Document Retrieve</li>
+                <li>CCD Retrieval</li>
+                <li>Patient Identity Resolution</li>
+                <li>Document Manifest Search</li>
+              </ul>
+            </div>
+            <div class="release-card">
+              <h3>Expanded operational scope</h3>
+              <ul>
+                <li>Alert Driven Retrieval</li>
+                <li>Clinical Portal Auto Query</li>
+                <li>On-Demand Document Query</li>
+                <li>Cross-QE Querying</li>
+                <li>Repository Document Retrieval</li>
+                <li>Subscription/Alert Document Access</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="transaction-detail">
+          <div class="section-header">
+            <div>
+              <h2>Transaction detail page</h2>
+              <p>
+                Select any transaction from the dashboard to open a page-like detail view with purpose, triggers, message patterns, standards, participating systems, migration impact, and benefits.
+              </p>
+            </div>
+          </div>
+          <div class="detail-shell" id="detail-shell" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        SPRL current-state comparison and PDR future-state storytelling for QE, business, and technical stakeholders.
+      </footer>
+    </div>
+
+    <script>
+      const transactions = [
+        {
+          id: "patient-discovery",
+          sprl: "Patient Discovery",
+          pdr: "Patient Lookup / Patient Resolution",
+          requestorChange: "Minor",
+          systems: "Provider, QE, SPRL, participating QEs, Verato/sMPI, PDR",
+          standards: "XCPD → Patient Lookup, FHIR JSON/API",
+          status: ["current", "future", "progress"],
+          businessPurpose: "Find the right patient and establish enough identity context to continue searching for CCDs and other clinical documents.",
+          trigger: "A provider or downstream application needs to locate a patient before discovering or retrieving documents.",
+          inputMessage: "SPRL receives an IHE XCPD patient discovery request. PDR receives a patient lookup request using repository-aware identity resolution.",
+          outputMessage: "SPRL returns patient identifiers and likely QE record locations. PDR returns a repository-specific patient identity that supports subsequent document search.",
+          standardsUsed: "SPRL uses IHE XCPD over XML transport patterns. PDR shifts to patient lookup services integrated with Verato/sMPI and FHIR-oriented API models.",
+          securityRequirements: "Authenticated and authorized requestor, patient identity governance, auditability, and HIPAA-aligned access controls for lookup activity.",
+          participatingSystems: "Provider EHR/app, local QE, SPRL, participating QEs, Verato/sMPI, PDR patient lookup service.",
+          migrationImpact: "Minor change for the requestor because patient search still starts the journey, but statewide fan-out logic gives way to centralized patient matching.",
+          benefits: "More precise matching, fewer QE hops, and a cleaner starting point for repository search and CCD retrieval.",
+          impactLabel: "Minor change",
+          flow: {
+            sprl: ["Provider", "QE", "SPRL", "Other QEs", "Patient identifiers + record locations"],
+            pdr: ["Provider", "PDR patient lookup", "Verato/sMPI", "Repository patient identity", "Search-ready match"]
+          },
+          comparison: {
+            sprl: [
+              "IHE XCPD transaction.",
+              "Query sent to SPRL.",
+              "SPRL identifies participating QEs.",
+              "Returns patient identifiers.",
+              "Returns locations where patient records may exist."
+            ],
+            pdr: [
+              "Patient Lookup service.",
+              "Uses Verato/sMPI matching.",
+              "Identifies patient within PDR.",
+              "Returns repository-specific patient identity.",
+              "Supports subsequent document search."
+            ]
+          }
+        },
+        {
+          id: "document-discovery",
+          sprl: "Document Discovery",
+          pdr: "Document Manifest Search",
+          requestorChange: "Major",
+          systems: "Provider, QE, SPRL, QE network, PDR document index",
+          standards: "XCA Query → Manifest Search, FHIR JSON/API",
+          status: ["current", "future", "progress"],
+          businessPurpose: "Identify which CCDs and clinical documents are available before attempting retrieval.",
+          trigger: "A matched patient has been identified and the requestor wants to know which documents exist.",
+          inputMessage: "SPRL receives a document discovery query against the QE network. PDR receives a document index or manifest search request.",
+          outputMessage: "SPRL returns metadata and document locations discovered across QEs. PDR returns a manifest of matching documents without contacting multiple QEs.",
+          standardsUsed: "SPRL uses XCA Query-style QE discovery patterns over IHE/XML. PDR centers discovery on repository metadata search delivered through API-based interactions.",
+          securityRequirements: "Authenticated access, scoped metadata visibility, patient-context validation, and full audit logging for manifest search behavior.",
+          participatingSystems: "Provider EHR/app, QE, SPRL, participating QEs, PDR document index and repository services.",
+          migrationImpact: "Major change because document discovery no longer depends on QE fan-out; requestors shift to a repository-centric search pattern.",
+          benefits: "Faster discovery, simpler request patterns, less network complexity, and clearer manifests for downstream retrieval.",
+          impactLabel: "Major change",
+          flow: {
+            sprl: ["Provider", "QE", "SPRL", "QE network queried", "Metadata returned"],
+            pdr: ["Provider", "PDR manifest search", "Repository metadata index", "Matching documents", "Manifest returned"]
+          },
+          comparison: {
+            sprl: [
+              "User submits document discovery request.",
+              "QE network queried.",
+              "Locations containing documents identified.",
+              "Metadata returned to requestor."
+            ],
+            pdr: [
+              "Query PDR Document Index.",
+              "Repository searches stored document metadata.",
+              "Matching documents returned.",
+              "Manifest returned without contacting multiple QEs."
+            ]
+          }
+        },
+        {
+          id: "document-retrieve",
+          sprl: "Document Retrieve",
+          pdr: "Document Retrieval",
+          requestorChange: "Major",
+          systems: "Provider, QE, SPRL, source QE, PDR repository API",
+          standards: "XCA Retrieve → Document Retrieval API",
+          status: ["current", "future", "progress"],
+          businessPurpose: "Retrieve the selected CCD or clinical document once discovery has identified the target document.",
+          trigger: "A requestor selects a desired CCD or document from discovery results.",
+          inputMessage: "SPRL receives an XCA Retrieve request routed to the identified QE. PDR receives a direct repository retrieval API request.",
+          outputMessage: "SPRL returns the QE-sourced CCD/document back through the network. PDR returns the selected document directly from the repository.",
+          standardsUsed: "SPRL depends on XCA Retrieve and IHE/XML exchange patterns. PDR delivers retrieval using repository APIs aligned to modern JSON/FHIR integration styles.",
+          securityRequirements: "Strong authentication, document-level authorization, consent-aware access, secure transport, and retrieval audit trails.",
+          participatingSystems: "Provider EHR/app, QE, SPRL, source QE, PDR repository and retrieval API.",
+          migrationImpact: "Major change because QE routing is removed and the requester calls the repository directly for the selected document.",
+          benefits: "Direct access, less latency, fewer hops, and a cleaner operational model for CCD retrieval.",
+          impactLabel: "Major change",
+          flow: {
+            sprl: ["Provider", "QE", "SPRL", "Source QE", "CCD/document returned"],
+            pdr: ["Provider", "PDR retrieval API", "Document store", "Selected document returned"]
+          },
+          comparison: {
+            sprl: [
+              "Request sent via XCA Retrieve.",
+              "SPRL routes request to identified QE.",
+              "QE returns CCD/document.",
+              "Results returned to requester."
+            ],
+            pdr: [
+              "Retrieve document directly from repository.",
+              "Repository returns selected document.",
+              "No QE fan-out required.",
+              "Document returned using API."
+            ]
+          }
+        },
+        {
+          id: "ccd-aggregation",
+          sprl: "CCD Aggregation",
+          pdr: "Repository Search Across Documents",
+          requestorChange: "Major",
+          systems: "Provider, QE, SPRL, multiple QEs, PDR repository",
+          standards: "Cross-QE aggregation → Repository-wide search",
+          status: ["current", "future", "progress"],
+          businessPurpose: "Assemble a broader clinical picture from multiple available CCDs and document sources.",
+          trigger: "A user needs a fuller longitudinal record after initial patient and document discovery.",
+          inputMessage: "SPRL-based aggregation requests span multiple QE-sourced CCD responses. PDR uses repository search across stored documents.",
+          outputMessage: "Current state returns aggregated CCD results from distributed sources. Future state returns unified repository search results across documents.",
+          standardsUsed: "IHE/XML exchange and QE-specific aggregation today, with repository-native search and API-driven retrieval in PDR.",
+          securityRequirements: "Role-based access, data minimization, full audit, and controls around aggregation scope.",
+          participatingSystems: "Provider, QE, SPRL, multiple QEs, PDR repository services.",
+          migrationImpact: "Major change because aggregation shifts from distributed collection to centralized repository search.",
+          benefits: "More consistent document access and a clearer longitudinal retrieval pattern.",
+          impactLabel: "Major change",
+          flow: {
+            sprl: ["Provider", "SPRL", "Multiple QEs", "CCD responses", "Aggregation returned"],
+            pdr: ["Provider", "PDR", "Repository search", "Relevant stored CCDs", "Unified results"]
+          },
+          comparison: {
+            sprl: [
+              "Aggregation depends on multiple QE-sourced CCD responses.",
+              "Network complexity affects timeliness and completeness."
+            ],
+            pdr: [
+              "Search across repository-held documents.",
+              "Results come from a centralized document holder."
+            ]
+          }
+        },
+        {
+          id: "alert-driven-retrieval",
+          sprl: "Alert Driven Retrieval",
+          pdr: "Alert Driven Retrieval from PDR",
+          requestorChange: "Minor",
+          systems: "Provider, alerts service, QE network, PDR repository",
+          standards: "Notification patterns + document access APIs",
+          status: ["current", "future", "progress"],
+          businessPurpose: "Enable timely follow-up retrieval when a clinical event or alert signals new information is available.",
+          trigger: "A new event, admission, discharge, or subscription alert triggers document follow-up.",
+          inputMessage: "Current alert workflows point requestors back into QE-mediated retrieval. Future alerts can direct requestors to PDR retrieval.",
+          outputMessage: "The requestor receives or retrieves the newly relevant document through the appropriate path.",
+          standardsUsed: "Existing network-specific alerting patterns evolve toward repository-linked alert retrieval.",
+          securityRequirements: "Subscription authorization, secure notification handling, and audit logging around alert-based access.",
+          participatingSystems: "Provider, alerts/subscription service, QE network, PDR.",
+          migrationImpact: "Minor change because the use case persists, but the retrieval target becomes the repository.",
+          benefits: "Faster operational response with clearer retrieval routing.",
+          impactLabel: "Minor change",
+          flow: {
+            sprl: ["Alert event", "QE / SPRL path", "Source identified", "Document retrieved"],
+            pdr: ["Alert event", "PDR notification context", "Repository retrieval", "Document returned"]
+          },
+          comparison: {
+            sprl: [
+              "Alerts still require downstream QE-oriented retrieval steps."
+            ],
+            pdr: [
+              "Alert-driven retrieval points to repository-held documents."
+            ]
+          }
+        },
+        {
+          id: "cross-qe-query",
+          sprl: "Cross-QE Query",
+          pdr: "Repository Query",
+          requestorChange: "Retired",
+          systems: "QE network, SPRL, PDR repository",
+          standards: "Cross-QE routing → Repository query",
+          status: ["current", "future", "retired"],
+          businessPurpose: "Reach across participating QEs to locate patient records and associated clinical documents.",
+          trigger: "A local QE must search beyond its own holdings.",
+          inputMessage: "SPRL coordinates routing and fan-out across participating QEs. PDR replaces this with repository query patterns.",
+          outputMessage: "Distributed cross-QE results today; centralized repository search results in the future.",
+          standardsUsed: "IHE-mediated routing in the current model, repository query services in the future model.",
+          securityRequirements: "Cross-organizational authorization today; centralized policy enforcement in the future state.",
+          participatingSystems: "Local QE, SPRL, participating QEs, PDR.",
+          migrationImpact: "Legacy XCA routing becomes retired as centralized repository query replaces cross-QE fan-out.",
+          benefits: "Operational simplification and fewer moving parts.",
+          impactLabel: "Retired / replaced",
+          flow: {
+            sprl: ["QE", "SPRL", "Other QEs", "Result set returned"],
+            pdr: ["QE or provider", "PDR", "Repository query", "Result set returned"]
+          },
+          comparison: {
+            sprl: [
+              "Fan-out across QEs is central to the query path."
+            ],
+            pdr: [
+              "Repository query replaces cross-QE routing."
+            ]
+          }
+        },
+        {
+          id: "clinical-portal-query",
+          sprl: "Clinical Portal Query",
+          pdr: "Clinical Portal Query",
+          requestorChange: "No change",
+          systems: "Clinical portal, QE, PDR integration",
+          standards: "Portal integration",
+          status: ["current", "future"],
+          businessPurpose: "Support portal users who need a consistent clinical query experience while the underlying data access model evolves.",
+          trigger: "A portal user initiates a patient or document query.",
+          inputMessage: "Portal interactions continue to present the experience, while backend integrations shift from SPRL/QE patterns to repository services.",
+          outputMessage: "The portal returns the appropriate clinical results with less visible disruption to end users.",
+          standardsUsed: "Existing portal integrations persist, but the backend path modernizes toward repository and API-based access.",
+          securityRequirements: "Portal authentication, audit logging, and access controls remain essential.",
+          participatingSystems: "Clinical portal, QE, SPRL/PDR integration services.",
+          migrationImpact: "No material user-facing change if the portal abstracts the backend modernization.",
+          benefits: "Continuity for end users with modernization behind the scenes.",
+          impactLabel: "No change",
+          flow: {
+            sprl: ["Portal", "QE", "SPRL", "Results returned"],
+            pdr: ["Portal", "PDR services", "Repository", "Results returned"]
+          },
+          comparison: {
+            sprl: [
+              "Portal relies on the current SPRL/QE backend."
+            ],
+            pdr: [
+              "Portal experience continues while PDR powers backend query and retrieval."
+            ]
+          }
+        }
+      ];
+
+      const coreIds = new Set(["patient-discovery", "document-discovery", "document-retrieve"]);
+
+      const tableBody = document.getElementById("transaction-table-body");
+      const detailShell = document.getElementById("detail-shell");
+      const comparisonPanels = document.getElementById("comparison-panels");
+      const impactGrid = document.getElementById("impact-grid");
+      const searchInput = document.getElementById("transaction-search");
+      const searchFeedback = document.getElementById("search-feedback");
+
+      function chip(label, type) {
+        return `<span class="chip ${type}">${label}</span>`;
+      }
+
+      function statusMarkup(types) {
+        return types
+          .map((type) => {
+            const labels = {
+              current: "Current State",
+              future: "Future State",
+              progress: "In Progress",
+              retired: "Retired",
+              new: "New"
+            };
+            return chip(labels[type], type);
+          })
+          .join(" ");
+      }
+
+      function renderTable(items) {
+        tableBody.innerHTML = items
+          .map(
+            (item) => `
+              <tr>
+                <td data-label="SPRL Transaction">
+                  <div class="row-title">${item.sprl}</div>
+                </td>
+                <td data-label="PDR Equivalent">${item.pdr}</td>
+                <td data-label="Requestor Change">${item.requestorChange}</td>
+                <td data-label="Systems">${item.systems}</td>
+                <td data-label="Standards">${item.standards}</td>
+                <td data-label="Status">${statusMarkup(item.status)}</td>
+                <td data-label="Detail">
+                  <button class="table-button" data-open-detail="${item.id}">Open detail</button>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function renderComparisons() {
+        comparisonPanels.innerHTML = transactions
+          .filter((item) => coreIds.has(item.id))
+          .map(
+            (item) => `
+              <article class="comparison-block">
+                <h3>${item.sprl} → ${item.pdr}</h3>
+                <div class="detail-meta">
+                  ${chip(item.impactLabel, item.impactLabel.toLowerCase().includes("retired") ? "retired" : item.impactLabel.toLowerCase().includes("major") ? "progress" : item.impactLabel.toLowerCase().includes("minor") ? "future" : "current")}
+                </div>
+                <div class="comparison-columns">
+                  <div class="comparison-card">
+                    <h3>SPRL</h3>
+                    <ul>${item.comparison.sprl.map((line) => `<li>${line}</li>`).join("")}</ul>
+                  </div>
+                  <div class="comparison-card">
+                    <h3>PDR</h3>
+                    <ul>${item.comparison.pdr.map((line) => `<li>${line}</li>`).join("")}</ul>
+                  </div>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function renderImpact() {
+        const impacts = [
+          { title: "Patient Discovery", status: "Minor change", copy: "The journey still begins with finding the patient, but matching shifts to PDR-aware lookup and identity resolution.", chipType: "future" },
+          { title: "Document Discovery", status: "Major change", copy: "Discovery becomes manifest search against repository metadata rather than QE fan-out.", chipType: "progress" },
+          { title: "Document Retrieve", status: "Major change", copy: "Retrieval is direct from the repository via API rather than routed through the identified QE.", chipType: "progress" },
+          { title: "XCA Routing", status: "Retired", copy: "Cross-QE routing gives way to centralized repository search and retrieval patterns.", chipType: "retired" },
+          { title: "Repository Search", status: "New", copy: "The future state introduces repository-first search as a core capability.", chipType: "new" },
+          { title: "Clinical Portal Query", status: "No change", copy: "The portal experience can remain familiar while backend integrations modernize.", chipType: "current" }
+        ];
+
+        impactGrid.innerHTML = impacts
+          .map(
+            (item) => `
+              <article class="impact-card">
+                <h3>${item.title}</h3>
+                <div class="detail-meta">${chip(item.status, item.chipType)}</div>
+                <p class="detail-copy">${item.copy}</p>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function renderDetail(id) {
+        const item = transactions.find((entry) => entry.id === id) || transactions[0];
+        detailShell.innerHTML = `
+          <h3>${item.sprl} → ${item.pdr}</h3>
+          <div class="detail-meta">
+            ${statusMarkup(item.status)}
+            ${chip(item.impactLabel, item.impactLabel.toLowerCase().includes("retired") ? "retired" : item.impactLabel.toLowerCase().includes("major") ? "progress" : item.impactLabel.toLowerCase().includes("minor") ? "future" : "current")}
+          </div>
+          <p class="detail-copy">${item.businessPurpose}</p>
+          <div class="detail-grid">
+            <div class="detail-box"><strong>Business purpose</strong>${item.businessPurpose}</div>
+            <div class="detail-box"><strong>Triggering event</strong>${item.trigger}</div>
+            <div class="detail-box"><strong>Input message</strong>${item.inputMessage}</div>
+            <div class="detail-box"><strong>Output message</strong>${item.outputMessage}</div>
+            <div class="detail-box"><strong>Standards used</strong>${item.standardsUsed}</div>
+            <div class="detail-box"><strong>Security requirements</strong>${item.securityRequirements}</div>
+            <div class="detail-box"><strong>Participating systems</strong>${item.participatingSystems}</div>
+            <div class="detail-box"><strong>Migration impact</strong>${item.migrationImpact}</div>
+            <div class="detail-box" style="grid-column: 1 / -1;"><strong>Benefits</strong>${item.benefits}</div>
+          </div>
+          <div class="comparison-columns" style="margin-top: 20px;">
+            <div class="comparison-card">
+              <h3>SPRL flow</h3>
+              <div class="flow-rail">${item.flow.sprl.map((step) => `<div class="flow-step">${step}</div>`).join("")}</div>
+            </div>
+            <div class="comparison-card">
+              <h3>PDR flow</h3>
+              <div class="flow-rail">${item.flow.pdr.map((step) => `<div class="flow-step">${step}</div>`).join("")}</div>
+            </div>
+          </div>
+        `;
+        window.location.hash = "transaction-detail";
+      }
+
+      function searchTransactions(term) {
+        const query = term.trim().toLowerCase();
+        const filtered = transactions.filter((item) =>
+          [
+            item.sprl,
+            item.pdr,
+            item.requestorChange,
+            item.systems,
+            item.standards,
+            item.participatingSystems,
+            item.standardsUsed
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(query)
+        );
+
+        renderTable(filtered);
+        searchFeedback.textContent = filtered.length
+          ? `Showing ${filtered.length} transaction${filtered.length === 1 ? "" : "s"} for “${term}”.`
+          : `No transactions matched “${term}”. Try terms like Patient Discovery, XCPD, FHIR, QE, or Document Retrieve.`;
+      }
+
+      document.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-open-detail]");
+        if (!target) return;
+        renderDetail(target.getAttribute("data-open-detail"));
+      });
+
+      searchInput.addEventListener("input", (event) => {
+        const term = event.target.value;
+        if (!term.trim()) {
+          renderTable(transactions);
+          searchFeedback.textContent =
+            "Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.";
+          return;
+        }
+        searchTransactions(term);
+      });
+
+      document.getElementById("export-pdf").addEventListener("click", () => window.print());
+
+      document.getElementById("export-word").addEventListener("click", () => {
+        const content = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+            <head><meta charset="utf-8"><title>QE Migration Comparison</title></head>
+            <body>${document.querySelector("main").innerHTML}</body>
+          </html>
+        `;
+        const blob = new Blob([content], { type: "application/msword" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "qe-migration-comparison.doc";
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+
+      document.getElementById("export-excel").addEventListener("click", () => {
+        const table = `
+          <table>
+            <tr>
+              <th>SPRL Transaction</th>
+              <th>PDR Equivalent</th>
+              <th>Requestor Change</th>
+              <th>Systems</th>
+              <th>Standards</th>
+            </tr>
+            ${transactions
+              .map(
+                (item) => `
+                  <tr>
+                    <td>${item.sprl}</td>
+                    <td>${item.pdr}</td>
+                    <td>${item.requestorChange}</td>
+                    <td>${item.systems}</td>
+                    <td>${item.standards}</td>
+                  </tr>
+                `
+              )
+              .join("")}
+          </table>
+        `;
+        const blob = new Blob([table], { type: "application/vnd.ms-excel" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "qe-migration-comparison.xls";
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+
+      renderTable(transactions);
+      renderComparisons();
+      renderImpact();
+      renderDetail("patient-discovery");
+    </script>
+  </body>
+</html>
