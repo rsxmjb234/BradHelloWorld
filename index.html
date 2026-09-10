@@ -1196,7 +1196,10 @@
         searchTransactions(term);
       });
 
-      document.getElementById("export-pdf").addEventListener("click", () => window.print());
+      document.getElementById("export-pdf").addEventListener("click", () => {
+        filterSummary.textContent = `Active view: ${currentFilterText}.`;
+        window.print();
+      });
 
       document.getElementById("export-word").addEventListener("click", () => {
         const content = buildWordExportRtf(currentTransactions, currentFilterText);

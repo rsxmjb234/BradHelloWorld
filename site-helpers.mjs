@@ -14,16 +14,29 @@ export function safeDelimitedCell(value) {
 }
 
 export function escapeRtf(value) {
-  return Array.from(String(value))
-    .map((character) => {
-      if (character === "\\") return "\\\\";
-      if (character === "{") return "\\{";
-      if (character === "}") return "\\}";
-      if (character === "\n") return "\\par ";
-      const codePoint = character.codePointAt(0);
-      return codePoint > 127 ? `\\u${codePoint}?` : character;
-    })
-    .join("");
+  const text = String(value);
+  let result = "";
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const codeUnit = text.charCodeAt(index);
+
+    if (character === "\\") {
+      result += "\\\\";
+    } else if (character === "{") {
+      result += "\\{";
+    } else if (character === "}") {
+      result += "\\}";
+    } else if (character === "\n") {
+      result += "\\par ";
+    } else if (codeUnit > 127) {
+      result += `\\u${codeUnit > 0x7fff ? codeUnit - 0x10000 : codeUnit}?`;
+    } else {
+      result += character;
+    }
+  }
+
+  return result;
 }
 
 export function buildWordExportRtf(items, filterText) {
