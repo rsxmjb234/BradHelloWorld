@@ -382,6 +382,10 @@
         margin-bottom: 10px;
       }
 
+      .detail-box.full-span {
+        grid-column: 1 / -1;
+      }
+
       .table-note {
         margin: 14px 0 0;
         font-size: 0.94rem;
@@ -1094,7 +1098,7 @@
             <div class="detail-box"><strong>Security requirements</strong>${escapeHtml(item.securityRequirements)}</div>
             <div class="detail-box"><strong>Participating systems</strong>${escapeHtml(item.participatingSystems)}</div>
             <div class="detail-box"><strong>Migration impact</strong>${escapeHtml(item.migrationImpact)}</div>
-            <div class="detail-box" style="grid-column: 1 / -1;"><strong>Benefits</strong>${escapeHtml(item.benefits)}</div>
+            <div class="detail-box full-span"><strong>Benefits</strong>${escapeHtml(item.benefits)}</div>
           </div>
           <div class="comparison-columns" style="margin-top: 20px;">
             <div class="comparison-card">
@@ -1122,7 +1126,14 @@
             item.systems,
             item.standards,
             item.participatingSystems,
-            item.standardsUsed
+            item.standardsUsed,
+            item.businessPurpose,
+            item.trigger,
+            item.inputMessage,
+            item.outputMessage,
+            item.securityRequirements,
+            item.migrationImpact,
+            item.benefits
           ]
             .join(" ")
             .toLowerCase()
@@ -1161,7 +1172,7 @@
           const body = cells
             .map((cell) => `\\intbl ${prefix}${escapeRtf(cell)}${suffix}\\cell`)
             .join("");
-          return `\\trowd\\trgaph108${cellDefinitions}${body}\\row\\pard`;
+          return `\\trowd\\trgaph108${cellDefinitions}${body}\\row\\pard\\par`;
         };
 
         const headerRow = buildRow(
