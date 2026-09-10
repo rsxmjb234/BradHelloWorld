@@ -464,7 +464,15 @@
         }
 
         thead {
-          display: none;
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
         }
 
         tr {
@@ -986,8 +994,24 @@
       const searchInput = document.getElementById("transaction-search");
       const searchFeedback = document.getElementById("search-feedback");
 
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (character) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        }[character]));
+      }
+
+      function safeSpreadsheetCell(value) {
+        const text = String(value);
+        const escaped = /^[=+\-@]/.test(text) ? `'${text}` : text;
+        return escapeHtml(escaped);
+      }
+
       function chip(label, type) {
-        return `<span class="chip ${type}">${label}</span>`;
+        return `<span class="chip ${type}">${escapeHtml(label)}</span>`;
       }
 
       function statusMarkup(types) {
@@ -1011,15 +1035,15 @@
             (item) => `
               <tr>
                 <td data-label="SPRL Transaction">
-                  <div class="row-title">${item.sprl}</div>
+                  <div class="row-title">${escapeHtml(item.sprl)}</div>
                 </td>
-                <td data-label="PDR Equivalent">${item.pdr}</td>
-                <td data-label="Requestor Change">${item.requestorChange}</td>
-                <td data-label="Systems">${item.systems}</td>
-                <td data-label="Standards">${item.standards}</td>
+                <td data-label="PDR Equivalent">${escapeHtml(item.pdr)}</td>
+                <td data-label="Requestor Change">${escapeHtml(item.requestorChange)}</td>
+                <td data-label="Systems">${escapeHtml(item.systems)}</td>
+                <td data-label="Standards">${escapeHtml(item.standards)}</td>
                 <td data-label="Status">${statusMarkup(item.status)}</td>
                 <td data-label="Detail">
-                  <button class="table-button" data-open-detail="${item.id}">Open detail</button>
+                  <button class="table-button" data-open-detail="${escapeHtml(item.id)}">Open detail</button>
                 </td>
               </tr>
             `
@@ -1033,18 +1057,18 @@
           .map(
             (item) => `
               <article class="comparison-block">
-                <h3>${item.sprl} → ${item.pdr}</h3>
+                <h3>${escapeHtml(item.sprl)} → ${escapeHtml(item.pdr)}</h3>
                 <div class="detail-meta">
                   ${chip(item.impactLabel, item.impactLabel.toLowerCase().includes("retired") ? "retired" : item.impactLabel.toLowerCase().includes("major") ? "progress" : item.impactLabel.toLowerCase().includes("minor") ? "future" : "current")}
                 </div>
                 <div class="comparison-columns">
                   <div class="comparison-card">
                     <h3>SPRL</h3>
-                    <ul>${item.comparison.sprl.map((line) => `<li>${line}</li>`).join("")}</ul>
+                    <ul>${item.comparison.sprl.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
                   </div>
                   <div class="comparison-card">
                     <h3>PDR</h3>
-                    <ul>${item.comparison.pdr.map((line) => `<li>${line}</li>`).join("")}</ul>
+                    <ul>${item.comparison.pdr.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
                   </div>
                 </div>
               </article>
@@ -1067,9 +1091,9 @@
           .map(
             (item) => `
               <article class="impact-card">
-                <h3>${item.title}</h3>
+                <h3>${escapeHtml(item.title)}</h3>
                 <div class="detail-meta">${chip(item.status, item.chipType)}</div>
-                <p class="detail-copy">${item.copy}</p>
+                <p class="detail-copy">${escapeHtml(item.copy)}</p>
               </article>
             `
           )
@@ -1079,31 +1103,31 @@
       function renderDetail(id) {
         const item = transactions.find((entry) => entry.id === id) || transactions[0];
         detailShell.innerHTML = `
-          <h3>${item.sprl} → ${item.pdr}</h3>
+          <h3>${escapeHtml(item.sprl)} → ${escapeHtml(item.pdr)}</h3>
           <div class="detail-meta">
             ${statusMarkup(item.status)}
             ${chip(item.impactLabel, item.impactLabel.toLowerCase().includes("retired") ? "retired" : item.impactLabel.toLowerCase().includes("major") ? "progress" : item.impactLabel.toLowerCase().includes("minor") ? "future" : "current")}
           </div>
-          <p class="detail-copy">${item.businessPurpose}</p>
+          <p class="detail-copy">${escapeHtml(item.businessPurpose)}</p>
           <div class="detail-grid">
-            <div class="detail-box"><strong>Business purpose</strong>${item.businessPurpose}</div>
-            <div class="detail-box"><strong>Triggering event</strong>${item.trigger}</div>
-            <div class="detail-box"><strong>Input message</strong>${item.inputMessage}</div>
-            <div class="detail-box"><strong>Output message</strong>${item.outputMessage}</div>
-            <div class="detail-box"><strong>Standards used</strong>${item.standardsUsed}</div>
-            <div class="detail-box"><strong>Security requirements</strong>${item.securityRequirements}</div>
-            <div class="detail-box"><strong>Participating systems</strong>${item.participatingSystems}</div>
-            <div class="detail-box"><strong>Migration impact</strong>${item.migrationImpact}</div>
-            <div class="detail-box" style="grid-column: 1 / -1;"><strong>Benefits</strong>${item.benefits}</div>
+            <div class="detail-box"><strong>Business purpose</strong>${escapeHtml(item.businessPurpose)}</div>
+            <div class="detail-box"><strong>Triggering event</strong>${escapeHtml(item.trigger)}</div>
+            <div class="detail-box"><strong>Input message</strong>${escapeHtml(item.inputMessage)}</div>
+            <div class="detail-box"><strong>Output message</strong>${escapeHtml(item.outputMessage)}</div>
+            <div class="detail-box"><strong>Standards used</strong>${escapeHtml(item.standardsUsed)}</div>
+            <div class="detail-box"><strong>Security requirements</strong>${escapeHtml(item.securityRequirements)}</div>
+            <div class="detail-box"><strong>Participating systems</strong>${escapeHtml(item.participatingSystems)}</div>
+            <div class="detail-box"><strong>Migration impact</strong>${escapeHtml(item.migrationImpact)}</div>
+            <div class="detail-box" style="grid-column: 1 / -1;"><strong>Benefits</strong>${escapeHtml(item.benefits)}</div>
           </div>
           <div class="comparison-columns" style="margin-top: 20px;">
             <div class="comparison-card">
               <h3>SPRL flow</h3>
-              <div class="flow-rail">${item.flow.sprl.map((step) => `<div class="flow-step">${step}</div>`).join("")}</div>
+              <div class="flow-rail">${item.flow.sprl.map((step) => `<div class="flow-step">${escapeHtml(step)}</div>`).join("")}</div>
             </div>
             <div class="comparison-card">
               <h3>PDR flow</h3>
-              <div class="flow-rail">${item.flow.pdr.map((step) => `<div class="flow-step">${step}</div>`).join("")}</div>
+              <div class="flow-rail">${item.flow.pdr.map((step) => `<div class="flow-step">${escapeHtml(step)}</div>`).join("")}</div>
             </div>
           </div>
         `;
@@ -1150,6 +1174,52 @@
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
+      function buildWordExportHtml() {
+        const rows = transactions
+          .map(
+            (item) => `
+              <tr>
+                <td>${escapeHtml(item.sprl)}</td>
+                <td>${escapeHtml(item.pdr)}</td>
+                <td>${escapeHtml(item.requestorChange)}</td>
+                <td>${escapeHtml(item.systems)}</td>
+                <td>${escapeHtml(item.standards)}</td>
+              </tr>
+            `
+          )
+          .join("");
+
+        return `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+            <head>
+              <meta charset="utf-8">
+              <title>QE Migration Comparison</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+                h1, h2 { color: #0f172a; }
+                table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+                th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; vertical-align: top; }
+                th { background: #e2e8f0; }
+              </style>
+            </head>
+            <body>
+              <h1>QE Migration Journey: SPRL to PDR</h1>
+              <p>A side-by-side comparison of the patient discovery, document discovery, and document retrieval journey for CCD access.</p>
+              <table>
+                <tr>
+                  <th>SPRL Transaction</th>
+                  <th>PDR Equivalent</th>
+                  <th>Requestor Change</th>
+                  <th>Systems</th>
+                  <th>Standards</th>
+                </tr>
+                ${rows}
+              </table>
+            </body>
+          </html>
+        `;
+      }
+
       searchInput.addEventListener("input", (event) => {
         const term = event.target.value;
         if (!term.trim()) {
@@ -1164,12 +1234,7 @@
       document.getElementById("export-pdf").addEventListener("click", () => window.print());
 
       document.getElementById("export-word").addEventListener("click", () => {
-        const content = `
-          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
-            <head><meta charset="utf-8"><title>QE Migration Comparison</title></head>
-            <body>${document.querySelector("main").innerHTML}</body>
-          </html>
-        `;
+        const content = buildWordExportHtml();
         const blob = new Blob([content], { type: "application/msword" });
         triggerDownload(blob, "qe-migration-comparison.doc");
       });
@@ -1188,11 +1253,11 @@
               .map(
                 (item) => `
                   <tr>
-                    <td>${item.sprl}</td>
-                    <td>${item.pdr}</td>
-                    <td>${item.requestorChange}</td>
-                    <td>${item.systems}</td>
-                    <td>${item.standards}</td>
+                    <td>${safeSpreadsheetCell(item.sprl)}</td>
+                    <td>${safeSpreadsheetCell(item.pdr)}</td>
+                    <td>${safeSpreadsheetCell(item.requestorChange)}</td>
+                    <td>${safeSpreadsheetCell(item.systems)}</td>
+                    <td>${safeSpreadsheetCell(item.standards)}</td>
                   </tr>
                 `
               )
