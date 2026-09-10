@@ -960,6 +960,7 @@
       const impactGrid = document.getElementById("impact-grid");
       const searchInput = document.getElementById("transaction-search");
       const searchFeedback = document.getElementById("search-feedback");
+      let currentTransactions = [...transactions];
 
       function escapeHtml(value) {
         return String(value).replace(/[&<>"']/g, (character) => ({
@@ -1004,6 +1005,7 @@
       }
 
       function renderTable(items) {
+        currentTransactions = [...items];
         tableBody.innerHTML = items
           .map(
             (item) => `
@@ -1150,7 +1152,7 @@
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      function buildWordExportRtf() {
+      function buildWordExportRtf(items) {
         const widths = [2200, 4400, 6200, 10200, 12800];
         const buildRow = (cells, bold = false) => {
           const prefix = bold ? "\\b " : "";
@@ -1159,14 +1161,14 @@
           const body = cells
             .map((cell) => `\\intbl ${prefix}${escapeRtf(cell)}${suffix}\\cell`)
             .join("");
-          return `\\trowd\\trgaph108${cellDefinitions}${body}\\row`;
+          return `\\trowd\\trgaph108${cellDefinitions}${body}\\row\\pard`;
         };
 
         const headerRow = buildRow(
           ["SPRL Transaction", "PDR Equivalent", "Requestor Change", "Systems", "Standards"],
           true
         );
-        const rows = transactions
+        const rows = items
           .map((item) => buildRow([item.sprl, item.pdr, item.requestorChange, item.systems, item.standards]))
           .join("");
 
@@ -1187,7 +1189,7 @@
       document.getElementById("export-pdf").addEventListener("click", () => window.print());
 
       document.getElementById("export-word").addEventListener("click", () => {
-        const content = buildWordExportRtf();
+        const content = buildWordExportRtf(currentTransactions);
         const blob = new Blob([content], { type: "application/rtf" });
         triggerDownload(blob, "qe-migration-comparison.rtf");
       });
@@ -1195,7 +1197,7 @@
       document.getElementById("export-excel").addEventListener("click", () => {
         const rows = [
           ["SPRL Transaction", "PDR Equivalent", "Requestor Change", "Systems", "Standards"],
-          ...transactions.map((item) => [item.sprl, item.pdr, item.requestorChange, item.systems, item.standards])
+          ...currentTransactions.map((item) => [item.sprl, item.pdr, item.requestorChange, item.systems, item.standards])
         ];
         const csv = rows.map((row) => row.map(safeDelimitedCell).join(",")).join("\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
