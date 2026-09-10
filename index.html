@@ -744,7 +744,9 @@
       </footer>
     </div>
 
-    <script>
+    <script type="module">
+      import { buildCsv, buildWordExportRtf, escapeHtml } from "./site-helpers.mjs";
+
       const transactions = [
         {
           id: "patient-discovery",
@@ -1000,34 +1002,6 @@
       let currentTransactions = [...baseTransactions];
       let currentFilterText = "Full transaction dashboard";
 
-      function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, (character) => ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;"
-        }[character]));
-      }
-
-      function safeDelimitedCell(value) {
-        const text = /^[=+\-@]/.test(String(value)) ? `'${String(value)}` : String(value);
-        return `"${text.replaceAll('"', '""')}"`;
-      }
-
-      function escapeRtf(value) {
-        return Array.from(String(value))
-          .map((character) => {
-            if (character === "\\") return "\\\\";
-            if (character === "{") return "\\{";
-            if (character === "}") return "\\}";
-            if (character === "\n") return "\\par ";
-            const codePoint = character.codePointAt(0);
-            return codePoint > 127 ? `\\u${codePoint}?` : character;
-          })
-          .join("");
-      }
-
       function chip(label, type) {
         return `<span class="chip ${type}">${escapeHtml(label)}</span>`;
       }
@@ -1152,7 +1126,7 @@
         `;
         if (shouldFocus) {
           window.location.hash = "transaction-detail";
-          detailShell.focus();
+          window.requestAnimationFrame(() => detailShell.focus());
         }
       }
 
@@ -1205,37 +1179,18 @@
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      function buildWordExportRtf(items) {
-        const widths = [2200, 4400, 6200, 10200, 12800];
-        const buildRow = (cells, bold = false) => {
-          const prefix = bold ? "\\b " : "";
-          const suffix = bold ? "\\b0 " : "";
-          const cellDefinitions = widths.map((width) => `\\cellx${width}`).join("");
-          const body = cells
-            .map((cell) => `\\intbl ${prefix}${escapeRtf(cell)}${suffix}\\cell`)
-            .join("");
-          return `\\trowd\\trgaph108${cellDefinitions}${body}\\row\\pard\\par`;
-        };
-
-        const headerRow = buildRow(
-          ["SPRL Transaction", "PDR Equivalent", "Requestor Change", "Systems", "Standards"],
-          true
-        );
-        const rows = items
-          .map((item) => buildRow([item.sprl, item.pdr, item.requestorChange, item.systems, item.standards]))
-          .join("");
-
-        return `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\fs22\\b QE Migration Journey: SPRL to PDR\\b0\\par\\par A side-by-side comparison of the patient discovery, document discovery, and document retrieval journey for CCD access.\\par Filter context: ${escapeRtf(currentFilterText)}\\par\\par ${headerRow}${rows}\\par}`;
+      function resetDashboardView() {
+        renderTable(baseTransactions);
+        currentFilterText = "Full transaction dashboard";
+        searchFeedback.textContent =
+          "Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.";
+        filterSummary.textContent = "Active view: Full transaction dashboard.";
       }
 
       searchInput.addEventListener("input", (event) => {
         const term = event.target.value;
         if (!term.trim()) {
-          renderTable(baseTransactions);
-          currentFilterText = "Full transaction dashboard";
-          searchFeedback.textContent =
-            "Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.";
-          filterSummary.textContent = "Active view: Full transaction dashboard.";
+          resetDashboardView();
           return;
         }
         searchTransactions(term);
@@ -1244,24 +1199,18 @@
       document.getElementById("export-pdf").addEventListener("click", () => window.print());
 
       document.getElementById("export-word").addEventListener("click", () => {
-        const content = buildWordExportRtf(currentTransactions);
+        const content = buildWordExportRtf(currentTransactions, currentFilterText);
         const blob = new Blob([content], { type: "application/rtf" });
         triggerDownload(blob, "qe-migration-comparison.rtf");
       });
 
       document.getElementById("export-excel").addEventListener("click", () => {
-        const rows = [
-          ["Filter Context", currentFilterText],
-          [],
-          ["SPRL Transaction", "PDR Equivalent", "Requestor Change", "Systems", "Standards"],
-          ...currentTransactions.map((item) => [item.sprl, item.pdr, item.requestorChange, item.systems, item.standards])
-        ];
-        const csv = rows.map((row) => row.map(safeDelimitedCell).join(",")).join("\n");
+        const csv = buildCsv(currentTransactions, currentFilterText);
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         triggerDownload(blob, "qe-migration-comparison.csv");
       });
 
-      renderTable(transactions);
+      resetDashboardView();
       renderComparisons();
       renderImpact();
       renderDetail("patient-discovery");
