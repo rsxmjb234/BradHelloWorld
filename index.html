@@ -407,6 +407,10 @@
         grid-column: 1 / -1;
       }
 
+      .detail-flows {
+        margin-top: 20px;
+      }
+
       .table-note {
         margin: 14px 0 0;
         font-size: 0.94rem;
@@ -431,17 +435,17 @@
           color: #111827;
         }
 
-        .button-row,
-        .filters,
-        #transaction-search,
-        .hero,
-        #core-comparisons,
-        #workflow-diagrams,
-        #standards-matrix,
-        #impact,
-        #release-scope,
-        #transaction-detail,
-        .footer {
+        body.print-dashboard-only .button-row,
+        body.print-dashboard-only .filters,
+        body.print-dashboard-only #transaction-search,
+        body.print-dashboard-only .hero,
+        body.print-dashboard-only #core-comparisons,
+        body.print-dashboard-only #workflow-diagrams,
+        body.print-dashboard-only #standards-matrix,
+        body.print-dashboard-only #impact,
+        body.print-dashboard-only #release-scope,
+        body.print-dashboard-only #transaction-detail,
+        body.print-dashboard-only .footer {
           display: none !important;
         }
 
@@ -575,13 +579,13 @@
             <table aria-label="SPRL to PDR transaction comparison table">
               <thead>
                 <tr>
-                  <th>SPRL Transaction</th>
-                  <th>PDR Equivalent</th>
-                  <th>Requestor Change</th>
-                  <th>Systems</th>
-                  <th>Standards</th>
-                  <th>Status</th>
-                  <th>Detail</th>
+                  <th scope="col">SPRL Transaction</th>
+                  <th scope="col">PDR Equivalent</th>
+                  <th scope="col">Requestor Change</th>
+                  <th scope="col">Systems</th>
+                  <th scope="col">Standards</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Detail</th>
                 </tr>
               </thead>
               <tbody id="transaction-table-body"></tbody>
@@ -651,9 +655,9 @@
             <table aria-label="Standards matrix">
               <thead>
                 <tr>
-                  <th>Capability</th>
-                  <th>SPRL</th>
-                  <th>PDR</th>
+                  <th scope="col">Capability</th>
+                  <th scope="col">SPRL</th>
+                  <th scope="col">PDR</th>
                 </tr>
               </thead>
               <tbody>
@@ -1129,7 +1133,7 @@
             <div class="detail-box"><dt>Migration impact</dt><dd>${escapeHtml(item.migrationImpact)}</dd></div>
             <div class="detail-box full-span"><dt>Benefits</dt><dd>${escapeHtml(item.benefits)}</dd></div>
           </dl>
-          <div class="comparison-columns" style="margin-top: 20px;">
+          <div class="comparison-columns detail-flows">
             <div class="comparison-card">
               <h3>SPRL flow</h3>
               <div class="flow-rail">${item.flow.sprl.map((step) => `<div class="flow-step">${escapeHtml(step)}</div>`).join("")}</div>
@@ -1218,10 +1222,12 @@
 
       document.getElementById("export-pdf").addEventListener("click", () => {
         syncFilterSummary();
+        document.body.classList.add("print-dashboard-only");
         window.print();
       });
 
       window.addEventListener("beforeprint", syncFilterSummary);
+      window.addEventListener("afterprint", () => document.body.classList.remove("print-dashboard-only"));
 
       document.getElementById("export-word").addEventListener("click", () => {
         const content = buildWordExportRtf(currentTransactions, currentFilterText);
