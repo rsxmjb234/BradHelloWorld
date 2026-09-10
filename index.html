@@ -558,9 +558,9 @@
                 placeholder="Search by transaction, standard, system, QE, or capability"
                 aria-label="Search transaction comparison"
               />
-              <button class="button secondary" id="export-pdf">Export PDF</button>
-              <button class="button secondary" id="export-word">Export Word</button>
-              <button class="button secondary" id="export-excel">Export Excel</button>
+              <button class="button secondary" id="export-pdf">Print / Save as PDF</button>
+              <button class="button secondary" id="export-word">Export Word RTF</button>
+              <button class="button secondary" id="export-excel">Export Excel CSV</button>
             </div>
           </div>
           <div class="table-wrap">
@@ -1004,10 +1004,17 @@
         }[character]));
       }
 
-      function safeSpreadsheetCell(value) {
-        const text = String(value);
-        const escaped = /^[=+\-@]/.test(text) ? `'${text}` : text;
-        return escapeHtml(escaped);
+      function safeDelimitedCell(value) {
+        const text = /^[=+\-@]/.test(String(value)) ? `'${String(value)}` : String(value);
+        return `"${text.replaceAll('"', '""')}"`;
+      }
+
+      function escapeRtf(value) {
+        return String(value)
+          .replace(/\\/g, "\\\\")
+          .replace(/\{/g, "\\{")
+          .replace(/\}/g, "\\}")
+          .replace(/\n/g, "\\par ");
       }
 
       function chip(label, type) {
@@ -1174,50 +1181,30 @@
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      function buildWordExportHtml() {
-        const rows = transactions
-          .map(
-            (item) => `
-              <tr>
-                <td>${escapeHtml(item.sprl)}</td>
-                <td>${escapeHtml(item.pdr)}</td>
-                <td>${escapeHtml(item.requestorChange)}</td>
-                <td>${escapeHtml(item.systems)}</td>
-                <td>${escapeHtml(item.standards)}</td>
-              </tr>
-            `
-          )
-          .join("");
+      function buildWordExportRtf() {
+        const header = [
+          "SPRL Transaction",
+          "PDR Equivalent",
+          "Requestor Change",
+          "Systems",
+          "Standards"
+        ].join("\\tab ");
 
-        return `
-          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
-            <head>
-              <meta charset="utf-8">
-              <title>QE Migration Comparison</title>
-              <style>
-                body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
-                h1, h2 { color: #0f172a; }
-                table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-                th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; vertical-align: top; }
-                th { background: #e2e8f0; }
-              </style>
-            </head>
-            <body>
-              <h1>QE Migration Journey: SPRL to PDR</h1>
-              <p>A side-by-side comparison of the patient discovery, document discovery, and document retrieval journey for CCD access.</p>
-              <table>
-                <tr>
-                  <th>SPRL Transaction</th>
-                  <th>PDR Equivalent</th>
-                  <th>Requestor Change</th>
-                  <th>Systems</th>
-                  <th>Standards</th>
-                </tr>
-                ${rows}
-              </table>
-            </body>
-          </html>
-        `;
+        const rows = transactions
+          .map((item) =>
+            [
+              item.sprl,
+              item.pdr,
+              item.requestorChange,
+              item.systems,
+              item.standards
+            ]
+              .map(escapeRtf)
+              .join("\\tab ")
+          )
+          .join("\\par ");
+
+        return `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\fs24\\b QE Migration Journey: SPRL to PDR\\b0\\par\\par A side-by-side comparison of the patient discovery, document discovery, and document retrieval journey for CCD access.\\par\\par ${header}\\par ${rows}\\par}`;
       }
 
       searchInput.addEventListener("input", (event) => {
@@ -1234,38 +1221,19 @@
       document.getElementById("export-pdf").addEventListener("click", () => window.print());
 
       document.getElementById("export-word").addEventListener("click", () => {
-        const content = buildWordExportHtml();
-        const blob = new Blob([content], { type: "application/msword" });
-        triggerDownload(blob, "qe-migration-comparison.doc");
+        const content = buildWordExportRtf();
+        const blob = new Blob([content], { type: "application/rtf" });
+        triggerDownload(blob, "qe-migration-comparison.rtf");
       });
 
       document.getElementById("export-excel").addEventListener("click", () => {
-        const table = `
-          <table>
-            <tr>
-              <th>SPRL Transaction</th>
-              <th>PDR Equivalent</th>
-              <th>Requestor Change</th>
-              <th>Systems</th>
-              <th>Standards</th>
-            </tr>
-            ${transactions
-              .map(
-                (item) => `
-                  <tr>
-                    <td>${safeSpreadsheetCell(item.sprl)}</td>
-                    <td>${safeSpreadsheetCell(item.pdr)}</td>
-                    <td>${safeSpreadsheetCell(item.requestorChange)}</td>
-                    <td>${safeSpreadsheetCell(item.systems)}</td>
-                    <td>${safeSpreadsheetCell(item.standards)}</td>
-                  </tr>
-                `
-              )
-              .join("")}
-          </table>
-        `;
-        const blob = new Blob([table], { type: "application/vnd.ms-excel" });
-        triggerDownload(blob, "qe-migration-comparison.xls");
+        const rows = [
+          ["SPRL Transaction", "PDR Equivalent", "Requestor Change", "Systems", "Standards"],
+          ...transactions.map((item) => [item.sprl, item.pdr, item.requestorChange, item.systems, item.standards])
+        ];
+        const csv = rows.map((row) => row.map(safeDelimitedCell).join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        triggerDownload(blob, "qe-migration-comparison.csv");
       });
 
       renderTable(transactions);
