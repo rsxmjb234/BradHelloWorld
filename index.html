@@ -735,7 +735,7 @@
               </p>
             </div>
           </div>
-          <div class="detail-shell" id="detail-shell" aria-live="polite"></div>
+          <div class="detail-shell" id="detail-shell" aria-live="polite" tabindex="-1"></div>
         </section>
       </main>
 
@@ -996,7 +996,8 @@
       const searchInput = document.getElementById("transaction-search");
       const searchFeedback = document.getElementById("search-feedback");
       const filterSummary = document.getElementById("filter-summary");
-      let currentTransactions = [...transactions];
+      let baseTransactions = [...transactions];
+      let currentTransactions = [...baseTransactions];
       let currentFilterText = "Full transaction dashboard";
 
       function escapeHtml(value) {
@@ -1015,11 +1016,16 @@
       }
 
       function escapeRtf(value) {
-        return String(value)
-          .replace(/\\/g, "\\\\")
-          .replace(/\{/g, "\\{")
-          .replace(/\}/g, "\\}")
-          .replace(/\n/g, "\\par ");
+        return Array.from(String(value))
+          .map((character) => {
+            if (character === "\\") return "\\\\";
+            if (character === "{") return "\\{";
+            if (character === "}") return "\\}";
+            if (character === "\n") return "\\par ";
+            const codePoint = character.codePointAt(0);
+            return codePoint > 127 ? `\\u${codePoint}?` : character;
+          })
+          .join("");
       }
 
       function chip(label, type) {
@@ -1146,12 +1152,13 @@
         `;
         if (shouldFocus) {
           window.location.hash = "transaction-detail";
+          detailShell.focus();
         }
       }
 
       function searchTransactions(term) {
         const query = term.trim().toLowerCase();
-        const filtered = transactions.filter((item) =>
+        const filtered = baseTransactions.filter((item) =>
           [
             item.sprl,
             item.pdr,
@@ -1224,7 +1231,7 @@
       searchInput.addEventListener("input", (event) => {
         const term = event.target.value;
         if (!term.trim()) {
-          renderTable(transactions);
+          renderTable(baseTransactions);
           currentFilterText = "Full transaction dashboard";
           searchFeedback.textContent =
             "Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.";
