@@ -30,7 +30,8 @@ export function escapeRtf(value) {
     } else if (character === "\n") {
       result += "\\par ";
     } else if (codeUnit > 127) {
-      result += `\\u${codeUnit > 0x7fff ? codeUnit - 0x10000 : codeUnit}?`;
+      const signedCodeUnit = codeUnit > 0x7fff ? codeUnit - 0x10000 : codeUnit;
+      result += `\\u${signedCodeUnit}?`;
     } else {
       result += character;
     }

@@ -42,4 +42,5 @@ test("CSV export includes filter context and guards spreadsheet formulas", () =>
 test("RTF escaping preserves non-ASCII characters through UTF-16 code units", () => {
   assert.equal(escapeRtf("😀"), "\\u-10179?\\u-8704?");
   assert.equal(escapeRtf("→"), "\\u8594?");
+  assert.equal(escapeRtf("\u9000"), "\\u-28672?");
 });
