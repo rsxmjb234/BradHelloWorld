@@ -412,7 +412,15 @@
 
         .button-row,
         .filters,
-        #transaction-search {
+        #transaction-search,
+        .hero,
+        #core-comparisons,
+        #workflow-diagrams,
+        #standards-matrix,
+        #impact,
+        #release-scope,
+        #transaction-detail,
+        .footer {
           display: none !important;
         }
 
@@ -553,6 +561,7 @@
           <p class="table-note" id="search-feedback">
             Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.
           </p>
+          <p class="table-note" id="filter-summary">Active view: Full transaction dashboard.</p>
         </section>
 
         <section id="core-comparisons">
@@ -964,7 +973,9 @@
       const impactGrid = document.getElementById("impact-grid");
       const searchInput = document.getElementById("transaction-search");
       const searchFeedback = document.getElementById("search-feedback");
+      const filterSummary = document.getElementById("filter-summary");
       let currentTransactions = [...transactions];
+      let currentFilterText = "Full transaction dashboard";
 
       function escapeHtml(value) {
         return String(value).replace(/[&<>"']/g, (character) => ({
@@ -1141,9 +1152,11 @@
         );
 
         renderTable(filtered);
+        currentFilterText = `Search filter: ${term}`;
         searchFeedback.textContent = filtered.length
           ? `Showing ${filtered.length} transaction${filtered.length === 1 ? "" : "s"} for “${term}”.`
           : `No transactions matched “${term}”. Try terms like Patient Discovery, XCPD, FHIR, QE, or Document Retrieve.`;
+        filterSummary.textContent = `Active view: ${currentFilterText}.`;
       }
 
       document.addEventListener("click", (event) => {
@@ -1183,15 +1196,17 @@
           .map((item) => buildRow([item.sprl, item.pdr, item.requestorChange, item.systems, item.standards]))
           .join("");
 
-        return `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\fs22\\b QE Migration Journey: SPRL to PDR\\b0\\par\\par A side-by-side comparison of the patient discovery, document discovery, and document retrieval journey for CCD access.\\par\\par ${headerRow}${rows}\\par}`;
+        return `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\fs22\\b QE Migration Journey: SPRL to PDR\\b0\\par\\par A side-by-side comparison of the patient discovery, document discovery, and document retrieval journey for CCD access.\\par Filter context: ${escapeRtf(currentFilterText)}\\par\\par ${headerRow}${rows}\\par}`;
       }
 
       searchInput.addEventListener("input", (event) => {
         const term = event.target.value;
         if (!term.trim()) {
           renderTable(transactions);
+          currentFilterText = "Full transaction dashboard";
           searchFeedback.textContent =
             "Search across transactions like “Patient Discovery,” “XCPD,” “FHIR,” “Document Retrieve,” or QE and repository terms.";
+          filterSummary.textContent = "Active view: Full transaction dashboard.";
           return;
         }
         searchTransactions(term);
@@ -1207,6 +1222,8 @@
 
       document.getElementById("export-excel").addEventListener("click", () => {
         const rows = [
+          ["Filter Context", currentFilterText],
+          [],
           ["SPRL Transaction", "PDR Equivalent", "Requestor Change", "Systems", "Standards"],
           ...currentTransactions.map((item) => [item.sprl, item.pdr, item.requestorChange, item.systems, item.standards])
         ];
